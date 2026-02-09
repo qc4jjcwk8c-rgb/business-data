@@ -776,6 +776,36 @@
             const [salesConfig, setSalesConfig] = useState({});
             const [salesFormData, setSalesFormData] = useState({});
 
+            // Auto-manage Future Hires based on total staff count
+            useEffect(() => {
+                if (totalStaffCount !== null) {
+                    // Calculate total assigned (excluding Future Hires)
+                    const totalAssigned = Object.entries(employeeCounts)
+                        .filter(([team]) => team !== 'Future Hires')
+                        .reduce((sum, [, count]) => sum + count, 0);
+                    
+                    const remaining = totalStaffCount - totalAssigned;
+                    
+                    if (remaining > 0) {
+                        // Auto-assign remainder to Future Hires
+                        if (employeeCounts['Future Hires'] !== remaining) {
+                            setEmployeeCounts(prev => ({...prev, 'Future Hires': remaining}));
+                        }
+                        if (!selectedTeams.includes('Future Hires')) {
+                            setSelectedTeams(prev => [...prev, 'Future Hires']);
+                        }
+                    } else if (remaining === 0 && employeeCounts['Future Hires']) {
+                        // Remove Future Hires if everything is allocated
+                        setEmployeeCounts(prev => {
+                            const newCounts = {...prev};
+                            delete newCounts['Future Hires'];
+                            return newCounts;
+                        });
+                        setSelectedTeams(prev => prev.filter(t => t !== 'Future Hires'));
+                    }
+                }
+            }, [employeeCounts, totalStaffCount, selectedTeams]);
+
             // Calculate current month for Excel headers
             const getCurrentMonthHeaders = () => {
                 const headers = [];
@@ -1031,30 +1061,6 @@
             const renderTeamSelection = () => {
                 const totalAssigned = getTotalEmployees();
                 const remaining = totalStaffCount ? (totalStaffCount - totalAssigned) : 0;
-                
-                // Auto-assign remaining to Future Hires
-                React.useEffect(() => {
-                    if (totalStaffCount && remaining > 0 && !employeeCounts['Future Hires']) {
-                        setEmployeeCounts(prev => ({...prev, 'Future Hires': remaining}));
-                        if (!selectedTeams.includes('Future Hires')) {
-                            setSelectedTeams(prev => [...prev, 'Future Hires']);
-                        }
-                    } else if (totalStaffCount && remaining < 0) {
-                        // If over-allocated, reduce Future Hires
-                        const futureHires = employeeCounts['Future Hires'] || 0;
-                        if (futureHires > 0) {
-                            const newFutureHires = Math.max(0, futureHires + remaining);
-                            if (newFutureHires === 0) {
-                                const newCounts = {...employeeCounts};
-                                delete newCounts['Future Hires'];
-                                setEmployeeCounts(newCounts);
-                                setSelectedTeams(selectedTeams.filter(t => t !== 'Future Hires'));
-                            } else {
-                                setEmployeeCounts(prev => ({...prev, 'Future Hires': newFutureHires}));
-                            }
-                        }
-                    }
-                }, [totalAssigned, totalStaffCount, remaining]);
                 
                 return (
                 <>
@@ -1332,7 +1338,8 @@
                         </div>
                     </div>
                 </>
-            );};
+            );
+            };
 
             const renderEmployeeCount = () => (
                 <>
