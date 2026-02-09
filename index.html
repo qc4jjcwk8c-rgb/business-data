@@ -776,36 +776,6 @@
             const [salesConfig, setSalesConfig] = useState({});
             const [salesFormData, setSalesFormData] = useState({});
 
-            // Auto-manage Future Hires based on total staff count
-            useEffect(() => {
-                if (totalStaffCount !== null) {
-                    // Calculate total assigned (excluding Future Hires)
-                    const totalAssigned = Object.entries(employeeCounts)
-                        .filter(([team]) => team !== 'Future Hires')
-                        .reduce((sum, [, count]) => sum + count, 0);
-                    
-                    const remaining = totalStaffCount - totalAssigned;
-                    
-                    if (remaining > 0) {
-                        // Auto-assign remainder to Future Hires
-                        if (employeeCounts['Future Hires'] !== remaining) {
-                            setEmployeeCounts(prev => ({...prev, 'Future Hires': remaining}));
-                        }
-                        if (!selectedTeams.includes('Future Hires')) {
-                            setSelectedTeams(prev => [...prev, 'Future Hires']);
-                        }
-                    } else if (remaining === 0 && employeeCounts['Future Hires']) {
-                        // Remove Future Hires if everything is allocated
-                        setEmployeeCounts(prev => {
-                            const newCounts = {...prev};
-                            delete newCounts['Future Hires'];
-                            return newCounts;
-                        });
-                        setSelectedTeams(prev => prev.filter(t => t !== 'Future Hires'));
-                    }
-                }
-            }, [employeeCounts, totalStaffCount, selectedTeams]);
-
             // Calculate current month for Excel headers
             const getCurrentMonthHeaders = () => {
                 const headers = [];
@@ -1059,8 +1029,20 @@
             );
 
             const renderTeamSelection = () => {
-                const totalAssigned = getTotalEmployees();
-                const remaining = totalStaffCount ? (totalStaffCount - totalAssigned) : 0;
+                // Calculate totals excluding Future Hires
+                const manuallyAssigned = Object.entries(employeeCounts)
+                    .filter(([team]) => team !== 'Future Hires')
+                    .reduce((sum, [, count]) => sum + count, 0);
+                
+                const remaining = totalStaffCount ? (totalStaffCount - manuallyAssigned) : 0;
+                
+                // Calculate what to show for each team (including computed Future Hires)
+                const displayCounts = {...employeeCounts};
+                if (totalStaffCount && remaining > 0) {
+                    displayCounts['Future Hires'] = remaining;
+                }
+                
+                const totalAssigned = manuallyAssigned + (remaining > 0 ? remaining : 0);
                 
                 return (
                 <>
@@ -1177,9 +1159,12 @@
                             <>
                                 <div className="employee-list">
                                     {[...TEAM_OPTIONS, ...selectedTeams.filter(t => !TEAM_OPTIONS.includes(t))].map(team => {
-                                        const count = employeeCounts[team] || 0;
+                                        const count = displayCounts[team] || 0;
                                         const isCustom = !TEAM_OPTIONS.includes(team);
                                         const isFutureHires = team === 'Future Hires';
+                                        
+                                        // Hide Future Hires if no remaining
+                                        if (isFutureHires && count === 0) return null;
                                         
                                         return (
                                             <div key={team} className="employee-row" style={{
@@ -1578,46 +1563,41 @@
                                 <h2 className="card-title">{currentCategory}</h2>
                                 <p className="card-subtitle">
                                     Category {currentNonStaffCategoryIndex + 1} of {categories.length} • 
-                                    Select items you want to include. You can adjust quantities and edit values in the downloaded file.
+                                    Select the items you would like to include in your non-staff costs. You can edit the names and add values in the downloaded file.
                                 </p>
                             </div>
 
-                            <div className="total-counter" style={{marginBottom: '2rem'}}>
-                                <div className="total-label">Total Items Selected (All Categories)</div>
-                                <div className="total-value">{getTotalNonStaffItems()}</div>
-                            </div>
-
-                            <div className="employee-list">
+                            <div className="employee-list" style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem'}}>
                                 {items.map(item => {
                                     const key = `${currentCategory}|${item}`;
-                                    const isSelected = selectedNonStaffItems[key];
+                                    const quantity = nonStaffQuantities[key] || 0;
+                                    const isSelected = quantity > 0;
                                     return (
                                         <div key={item} className="employee-row" style={{
                                             background: isSelected ? 'linear-gradient(135deg, rgba(0, 172, 193, 0.05) 0%, rgba(74, 144, 226, 0.05) 100%)' : 'var(--bg-main)',
-                                            border: isSelected ? '2px solid var(--primary)' : '1px solid var(--border)'
+                                            border: isSelected ? '2px solid var(--primary)' : '1px solid var(--border)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            padding: '1rem',
+                                            gap: '0.75rem'
                                         }}>
-                                            <div style={{display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1}}>
-                                                <div 
-                                                    className="checkbox"
-                                                    style={{
-                                                        cursor: 'pointer',
-                                                        background: isSelected ? 'var(--primary)' : 'transparent',
-                                                        borderColor: isSelected ? 'var(--primary)' : 'var(--border)'
-                                                    }}
-                                                    onClick={() => toggleNonStaffItem(currentCategory, item)}
-                                                >
-                                                    {isSelected && <span className="checkmark" style={{display: 'block'}}>✓</span>}
-                                                </div>
-                                                <div className="employee-label">{item}</div>
+                                            <div style={{
+                                                flex: 1,
+                                                fontWeight: isSelected ? '600' : '400',
+                                                color: isSelected ? 'var(--primary-dark)' : 'var(--text-primary)'
+                                            }}>
+                                                {item}
                                             </div>
-                                            {isSelected && (
-                                                <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
-                                                    <span style={{fontSize: '0.875rem', color: 'var(--text-secondary)'}}>Qty:</span>
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            const currentQty = nonStaffQuantities[key] || 1;
-                                                            if (currentQty > 1) {
+                                            <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+                                                <span style={{fontSize: '0.875rem', color: 'var(--text-secondary)'}}>Qty:</span>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        if (quantity > 0) {
+                                                            updateNonStaffQuantity(currentCategory, item, quantity - 1);
+                                                        }
+                                                    }}
                                                                 updateNonStaffQuantity(currentCategory, item, currentQty - 1);
                                                             }
                                                         }}
@@ -1639,17 +1619,16 @@
                                                     </button>
                                                     <input 
                                                         type="number"
-                                                        min="1"
+                                                        min="0"
                                                         className="employee-input"
                                                         style={{width: '60px', textAlign: 'center', cursor: 'default'}}
-                                                        value={nonStaffQuantities[key] || 1}
+                                                        value={quantity}
                                                         readOnly
                                                     />
                                                     <button
                                                         onClick={(e) => {
                                                             e.stopPropagation();
-                                                            const currentQty = nonStaffQuantities[key] || 1;
-                                                            updateNonStaffQuantity(currentCategory, item, currentQty + 1);
+                                                            updateNonStaffQuantity(currentCategory, item, quantity + 1);
                                                         }}
                                                         style={{
                                                             background: 'var(--primary)',
@@ -1668,7 +1647,6 @@
                                                         +
                                                     </button>
                                                 </div>
-                                            )}
                                         </div>
                                     );
                                 })}
