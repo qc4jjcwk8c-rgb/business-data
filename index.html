@@ -1551,11 +1551,37 @@
                             </div>
                             <div className="progress-step">
                                 <div className="progress-step-number">3</div>
-                                <div className="progress-step-label">Sales Forecast</div>
+                                <div className="progress-step-label">Revenue</div>
                             </div>
                         </div>
 
                         <div className="card">
+                            {currentNonStaffCategoryIndex === 0 && (
+                                <div style={{
+                                    marginBottom: '2rem',
+                                    padding: '1.5rem',
+                                    background: 'linear-gradient(135deg, rgba(0, 172, 193, 0.05) 0%, rgba(74, 144, 226, 0.05) 100%)',
+                                    borderRadius: '8px',
+                                    border: '2px solid var(--primary)'
+                                }}>
+                                    <h2 style={{
+                                        fontSize: '1.5rem',
+                                        fontWeight: '700',
+                                        color: 'var(--primary-dark)',
+                                        marginBottom: '0.75rem'
+                                    }}>
+                                        Non-staff costs
+                                    </h2>
+                                    <p style={{
+                                        fontSize: '1rem',
+                                        color: 'var(--text-secondary)',
+                                        lineHeight: '1.5',
+                                        margin: 0
+                                    }}>
+                                        Add costs associated with running your business. You will be able to change the names on the list to match your specific costs.
+                                    </p>
+                                </div>
+                            )}
                             <div className="card-header">
                                 <h2 className="card-title">{currentCategory}</h2>
                                 <p className="card-subtitle">
@@ -1659,20 +1685,12 @@
                                 >
                                     ← Back
                                 </button>
-                                <div style={{display: 'flex', gap: '0.75rem'}}>
-                                    <button 
-                                        className="button button-secondary" 
-                                        onClick={handleSkip}
-                                    >
-                                        No costs in this category - Skip
-                                    </button>
-                                    <button 
-                                        className="button button-primary" 
-                                        onClick={handleNext}
-                                    >
-                                        {isLastCategory ? 'Next: Sales Forecast →' : 'Next Category →'}
-                                    </button>
-                                </div>
+                                <button 
+                                    className="button button-primary" 
+                                    onClick={handleNext}
+                                >
+                                    {isLastCategory ? 'Next: Sales Forecast →' : 'Next Category →'}
+                                </button>
                             </div>
                         </div>
                     </>
@@ -1688,11 +1706,7 @@
                         </div>
                         <div className="progress-step active">
                             <div className="progress-step-number">2</div>
-                            <div className="progress-step-label">Sales Model</div>
-                        </div>
-                        <div className="progress-step">
-                            <div className="progress-step-number">3</div>
-                            <div className="progress-step-label">Complete</div>
+                            <div className="progress-step-label">Revenue</div>
                         </div>
                     </div>
 
@@ -1785,11 +1799,7 @@
                             </div>
                             <div className="progress-step active">
                                 <div className="progress-step-number">2</div>
-                                <div className="progress-step-label">Sales Model</div>
-                            </div>
-                            <div className="progress-step">
-                                <div className="progress-step-number">3</div>
-                                <div className="progress-step-label">Complete</div>
+                                <div className="progress-step-label">Revenue</div>
                             </div>
                         </div>
 
@@ -1933,11 +1943,7 @@
                         </div>
                         <div className="progress-step active">
                             <div className="progress-step-number">2</div>
-                            <div className="progress-step-label">Sales Model</div>
-                        </div>
-                        <div className="progress-step">
-                            <div className="progress-step-number">3</div>
-                            <div className="progress-step-label">Complete</div>
+                            <div className="progress-step-label">Revenue</div>
                         </div>
                     </div>
 
@@ -2038,9 +2044,9 @@
                             <div className="progress-step-number">✓</div>
                             <div className="progress-step-label">Non-Staff Costs</div>
                         </div>
-                        <div className="progress-step active">
-                            <div className="progress-step-number">3</div>
-                            <div className="progress-step-label">Complete</div>
+                        <div className="progress-step completed">
+                            <div className="progress-step-number">✓</div>
+                            <div className="progress-step-label">Revenue</div>
                         </div>
                     </div>
 
