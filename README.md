@@ -1,4 +1,4 @@
-# Business Data Builder for Sherloc
+# Business Data Builder
 
 A web application that helps UK small business owners create structured business planning data through an interactive questionnaire. Generates Excel files with proper formulas, dropdowns, and formatting.
 
@@ -197,7 +197,7 @@ git push -u origin main
 - **Frontend**: React (via CDN), vanilla JavaScript
 - **Backend**: Python HTTP server
 - **Excel Generation**: openpyxl library
-- **Design**: Custom CSS with Sherloc brand colors
+- **Design**: Custom CSS with brand colors
 
 ### Browser Compatibility
 - Modern browsers (Chrome, Firefox, Safari, Edge)
@@ -214,8 +214,4 @@ git push -u origin main
 
 ## Support
 
-For issues or questions, please contact the Sherloc team through the help section at www.sherloc.co.uk
-
-## License
-
-© 2025 ELEMENTARY B LTD. All rights reserved.
+Created by Jeff Lucas
