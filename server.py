@@ -414,8 +414,8 @@ class BusinessDataHandler(SimpleHTTPRequestHandler):
             sales_sheet.merge_cells(f'A{row_num}:D{row_num}')
             row_num += 1
             
-            # Volume headers
-            vol_headers = ['Item', 'Type', 'Starting Volume', 'Growth %'] + month_headers
+            # Volume headers (no date headers - those are only in REVENUE section)
+            vol_headers = ['Item', 'Type', 'Starting Volume', 'Growth %'] + [''] * 48  # Empty headers for month columns
             for col_idx, header in enumerate(vol_headers, 1):
                 cell = sales_sheet.cell(row=row_num, column=col_idx, value=header)
                 cell.font = Font(bold=True, size=11)
@@ -497,8 +497,8 @@ class BusinessDataHandler(SimpleHTTPRequestHandler):
             sales_sheet.merge_cells(f'A{row_num}:D{row_num}')
             row_num += 1
             
-            # COGS headers
-            cogs_headers = ['Item', 'Type', 'Unit Cost', 'Growth %'] + month_headers
+            # COGS headers (no date headers - those are only in REVENUE section)
+            cogs_headers = ['Item', 'Type', 'Unit Cost', 'Growth %'] + [''] * 48  # Empty headers for month columns
             for col_idx, header in enumerate(cogs_headers, 1):
                 cell = sales_sheet.cell(row=row_num, column=col_idx, value=header)
                 cell.font = Font(bold=True, size=11)
