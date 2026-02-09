@@ -1,0 +1,2167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Data Builder</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #00ACC1;
+            --primary-dark: #008c9e;
+            --secondary: #4A90E2;
+            --accent: #FF6B35;
+            --success: #00A86B;
+            --bg-main: #F8FAFB;
+            --bg-card: #FFFFFF;
+            --text-primary: #1A1F36;
+            --text-secondary: #677489;
+            --border: #E4E7EB;
+            --shadow: 0 2px 8px rgba(0, 172, 193, 0.08);
+            --shadow-lg: 0 8px 24px rgba(0, 172, 193, 0.12);
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg-main);
+            color: var(--text-primary);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        #root {
+            min-height: 100vh;
+        }
+
+        .header {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 1.25rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .logo-text {
+            font-family: 'Archivo', sans-serif;
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .header-subtitle {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-left: 48px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .hero {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .hero h1 {
+            font-family: 'Archivo', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.7;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 2.5rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.6s ease-out;
+            border: 1px solid var(--border);
+        }
+
+        .card-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-family: 'Archivo', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .card-subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .button {
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'DM Sans', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            justify-content: center;
+            min-width: 160px;
+        }
+
+        .button-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .button-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .button-secondary {
+            background: var(--bg-main);
+            color: var(--primary);
+            border: 2px solid var(--border);
+        }
+
+        .button-secondary:hover {
+            border-color: var(--primary);
+            background: white;
+        }
+
+        .button-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .button-success:hover {
+            background: #008c5a;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .team-option {
+            padding: 1rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: var(--bg-main);
+        }
+
+        .team-option:hover {
+            border-color: var(--secondary);
+            background: white;
+        }
+
+        .team-option.selected {
+            border-color: var(--primary);
+            background: linear-gradient(135deg, rgba(43, 90, 158, 0.05) 0%, rgba(74, 144, 226, 0.05) 100%);
+        }
+
+        .team-option-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .team-option.selected .checkbox {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .checkmark {
+            width: 12px;
+            height: 12px;
+            color: white;
+            display: none;
+        }
+
+        .team-option.selected .checkmark {
+            display: block;
+        }
+
+        .custom-input-wrapper {
+            margin-top: 1rem;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: 'DM Sans', sans-serif;
+            transition: all 0.2s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: white;
+        }
+
+        .employee-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .employee-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg-main);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .employee-label {
+            flex: 1;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .employee-input {
+            width: 120px;
+            padding: 0.625rem 1rem;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            font-size: 1rem;
+            text-align: center;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .employee-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .total-counter {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .total-label {
+            font-size: 0.875rem;
+            opacity: 0.9;
+            margin-bottom: 0.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .total-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            font-family: 'Archivo', sans-serif;
+        }
+
+        .progress-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3rem;
+            position: relative;
+            padding-bottom: 2rem;
+        }
+
+        .progress-step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+
+        .progress-step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--bg-main);
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.5rem;
+            font-weight: 600;
+            font-family: 'Archivo', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .progress-step.active .progress-step-number {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .progress-step.completed .progress-step-number {
+            background: var(--success);
+            border-color: var(--success);
+            color: white;
+        }
+
+        .progress-step-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .progress-step.active .progress-step-label {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .file-upload {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 3rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--bg-main);
+        }
+
+        .file-upload:hover {
+            border-color: var(--primary);
+            background: white;
+        }
+
+        .file-upload-icon {
+            font-size: 3rem;
+            color: var(--secondary);
+            margin-bottom: 1rem;
+        }
+
+        .success-message {
+            background: linear-gradient(135deg, rgba(0, 168, 107, 0.1) 0%, rgba(0, 168, 107, 0.05) 100%);
+            border: 2px solid var(--success);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .success-icon {
+            font-size: 4rem;
+            color: var(--success);
+            margin-bottom: 1rem;
+        }
+
+        .success-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--success);
+            margin-bottom: 0.5rem;
+            font-family: 'Archivo', sans-serif;
+        }
+
+        .dropdown-group {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .item-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem;
+            background: var(--bg-main);
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+        }
+
+        .item-name {
+            flex: 1;
+            font-weight: 500;
+        }
+
+        select {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            background: white;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, rgba(74, 144, 226, 0.1) 0%, rgba(43, 90, 158, 0.05) 100%);
+            border-left: 4px solid var(--primary);
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+        }
+
+        .info-box-title {
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .info-box-text {
+            color: var(--text-secondary);
+            font-size: 0.9375rem;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 2rem 1rem;
+            }
+
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .card {
+                padding: 1.5rem;
+            }
+
+            .team-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // Predefined team categories
+        const TEAM_OPTIONS = [
+            'Executive / Management',
+            'Operations',
+            'Engineering / Technical',
+            'Product Management',
+            'Sales',
+            'Marketing',
+            'Customer Support',
+            'Customer Success / Account Management',
+            'Finance & Accounting',
+            'Human Resources',
+            'IT / Information Systems',
+            'Supply Chain / Procurement',
+            'Manufacturing / Production',
+            'Logistics / Distribution',
+            'Quality Assurance',
+            'Legal / Compliance',
+            'Data & Analytics',
+            'Project Management',
+            'Future Hires'
+        ];
+
+        const NON_STAFF_CATEGORIES = {
+            '🏢 Facilities & Premises': [
+                'Rent or lease payments',
+                'Utilities (electricity, gas, water)',
+                'Internet & phone lines',
+                'Property taxes (if applicable)',
+                'Building insurance',
+                'Cleaning & janitorial',
+                'Repairs & maintenance',
+                'Security services',
+                'Office furniture & fixtures'
+            ],
+            '💻 Technology & IT': [
+                'Software subscriptions (SaaS tools)',
+                'Cloud hosting & servers',
+                'Licenses (productivity, design, accounting)',
+                'Hardware purchases (laptops, monitors, phones)',
+                'IT support & managed services',
+                'Cybersecurity tools',
+                'Data storage & backup'
+            ],
+            '📦 Equipment & Supplies': [
+                'Office supplies (stationery, printer ink, paper)',
+                'Operational supplies (industry-specific materials)',
+                'Small tools & accessories',
+                'Printing & copying',
+                'Postage & shipping'
+            ],
+            '🚚 Operations & Delivery Costs': [
+                'Raw materials / inventory',
+                'Packaging',
+                'Shipping & logistics',
+                'Warehousing & storage',
+                'Manufacturing or production costs',
+                'Third-party service delivery costs'
+            ],
+            '📣 Sales & Marketing': [
+                'Advertising (digital + offline)',
+                'Marketing software/tools',
+                'Website hosting & domains',
+                'Branding & design work',
+                'Content creation',
+                'Events & trade shows',
+                'Sponsorships',
+                'PR & communications',
+                'Promotional materials'
+            ],
+            '🧾 Professional & External Services': [
+                'Accounting & bookkeeping',
+                'Legal fees',
+                'Consulting',
+                'Audit fees',
+                'Outsourced contractors/freelancers',
+                'Recruitment agencies',
+                'Specialized advisory services'
+            ],
+            '🚗 Travel & Transport': [
+                'Flights & trains',
+                'Hotels & accommodation',
+                'Meals while traveling',
+                'Mileage reimbursement',
+                'Vehicle lease or rental',
+                'Fuel & parking',
+                'Taxis / rideshare'
+            ],
+            '🛡️ Insurance': [
+                'General liability insurance',
+                'Professional indemnity',
+                'Property insurance',
+                'Cyber insurance',
+                'Product insurance'
+            ],
+            '🏦 Financial & Administrative': [
+                'Bank fees',
+                'Payment processing fees',
+                'Loan interest',
+                'Subscription services',
+                'Memberships & dues',
+                'Licensing & regulatory fees'
+            ],
+            '🎓 Training & Development': [
+                'Training programs',
+                'Certifications',
+                'Courses',
+                'Conferences & workshops',
+                'Learning platforms'
+            ]
+        };
+
+
+        const SALES_MODELS = [
+            {
+                id: 'product',
+                name: '📦 Product / Retail / E-commerce',
+                description: 'Best for: physical goods, DTC brands, wholesalers',
+                fields: [
+                    { name: 'productName', label: 'Product Name', type: 'text' },
+                    { name: 'startingUnits', label: 'Starting Units Sold (Month 1)', type: 'number' },
+                    { name: 'unitPrice', label: 'Price per Unit', type: 'currency' },
+                    { name: 'costPerUnit', label: 'Cost per Unit (COGS)', type: 'currency' },
+                    { name: 'monthlyGrowth', label: 'Monthly Growth Rate %', type: 'percentage' }
+                ]
+            },
+            {
+                id: 'service',
+                name: '💼 Service Business',
+                description: 'Best for: consulting, agencies, contractors, professional services',
+                fields: [
+                    { name: 'serviceName', label: 'Service Name', type: 'text' },
+                    { name: 'startingHours', label: 'Starting Hours/Projects (Month 1)', type: 'number' },
+                    { name: 'hourlyRate', label: 'Rate per Hour/Project', type: 'currency' },
+                    { name: 'deliveryCost', label: 'Delivery Cost per Hour/Project', type: 'currency' },
+                    { name: 'monthlyGrowth', label: 'Monthly Growth Rate %', type: 'percentage' }
+                ]
+            },
+            {
+                id: 'saas',
+                name: '💻 SaaS / Subscription',
+                description: 'Best for: recurring software or subscription services',
+                fields: [
+                    { name: 'planName', label: 'Plan/Tier Name', type: 'text' },
+                    { name: 'startingSubscribers', label: 'Starting Subscribers (Month 1)', type: 'number' },
+                    { name: 'monthlyPrice', label: 'Monthly Price per Subscriber', type: 'currency' },
+                    { name: 'churnRate', label: 'Monthly Churn Rate %', type: 'percentage' },
+                    { name: 'growthRate', label: 'New Subscriber Growth Rate %', type: 'percentage' },
+                    { name: 'costPerSubscriber', label: 'Cost per Subscriber (hosting, etc.)', type: 'currency' }
+                ]
+            },
+            {
+                id: 'marketplace',
+                name: '🏪 Marketplace / Platform',
+                description: 'Best for: platforms that take a commission',
+                fields: [
+                    { name: 'transactionType', label: 'Transaction Type', type: 'text' },
+                    { name: 'startingGMV', label: 'Starting GMV (Month 1)', type: 'currency' },
+                    { name: 'commissionRate', label: 'Commission Rate %', type: 'percentage' },
+                    { name: 'processingFee', label: 'Payment Processing Fee %', type: 'percentage' },
+                    { name: 'monthlyGrowth', label: 'Monthly GMV Growth Rate %', type: 'percentage' }
+                ]
+            },
+            {
+                id: 'manufacturing',
+                name: '🏭 Manufacturing',
+                description: 'Best for: factories, producers',
+                fields: [
+                    { name: 'productLine', label: 'Product Line', type: 'text' },
+                    { name: 'startingUnits', label: 'Starting Units Produced (Month 1)', type: 'number' },
+                    { name: 'pricePerUnit', label: 'Price per Unit', type: 'currency' },
+                    { name: 'materialCost', label: 'Raw Materials per Unit', type: 'currency' },
+                    { name: 'laborCost', label: 'Direct Labor per Unit', type: 'currency' },
+                    { name: 'overheadCost', label: 'Manufacturing Overhead per Unit', type: 'currency' },
+                    { name: 'monthlyGrowth', label: 'Monthly Growth Rate %', type: 'percentage' }
+                ]
+            },
+            {
+                id: 'usage',
+                name: '⚡ Usage / Consumption',
+                description: 'Best for: cloud services, utilities, telecom, AI tools',
+                fields: [
+                    { name: 'usageMetric', label: 'Usage Metric (e.g., API calls, GB, minutes)', type: 'text' },
+                    { name: 'startingVolume', label: 'Starting Volume (Month 1)', type: 'number' },
+                    { name: 'pricePerUnit', label: 'Price per Unit', type: 'currency' },
+                    { name: 'costPerUnit', label: 'Variable Cost per Unit', type: 'currency' },
+                    { name: 'monthlyGrowth', label: 'Monthly Volume Growth Rate %', type: 'percentage' }
+                ]
+            },
+            {
+                id: 'hybrid',
+                name: '🔀 Hybrid Model',
+                description: 'Combine multiple revenue streams (SaaS + Services, Product + Subscription, etc.)',
+                fields: [
+                    { name: 'streamName', label: 'Revenue Stream Name', type: 'text' },
+                    { name: 'streamType', label: 'Stream Type', type: 'select', options: ['Product', 'Service', 'Subscription', 'Usage', 'Commission'] },
+                    { name: 'startingVolume', label: 'Starting Volume/Units (Month 1)', type: 'number' },
+                    { name: 'price', label: 'Price per Unit', type: 'currency' },
+                    { name: 'cost', label: 'Cost per Unit (COGS)', type: 'currency' },
+                    { name: 'monthlyGrowth', label: 'Monthly Growth Rate %', type: 'percentage' }
+                ]
+            },
+            {
+                id: 'custom',
+                name: '✏️ Custom Model',
+                description: 'Design your own sales forecast structure',
+                isCustom: true
+            }
+        ];
+
+        function BusinessDataBuilder() {
+            const [step, setStep] = useState('intro');
+            const [modelType, setModelType] = useState(null);
+            const [selectedTeams, setSelectedTeams] = useState([]);
+            const [customTeam, setCustomTeam] = useState('');
+            const [employeeCounts, setEmployeeCounts] = useState({});
+            const [totalStaffCount, setTotalStaffCount] = useState(null);
+            const [extraCategory, setExtraCategory] = useState(null);
+            const [extraCategoryOptions, setExtraCategoryOptions] = useState([]);
+            const [selectedNonStaffItems, setSelectedNonStaffItems] = useState({});
+            const [nonStaffQuantities, setNonStaffQuantities] = useState({});
+            const [currentNonStaffCategoryIndex, setCurrentNonStaffCategoryIndex] = useState(0);
+            const [salesModel, setSalesModel] = useState(null);
+            const [salesItems, setSalesItems] = useState([]);
+            const [salesConfig, setSalesConfig] = useState({});
+            const [salesFormData, setSalesFormData] = useState({});
+
+            // Calculate current month for Excel headers
+            const getCurrentMonthHeaders = () => {
+                const headers = [];
+                const currentDate = new Date();
+                
+                for (let i = 0; i < 48; i++) {
+                    const date = new Date(currentDate);
+                    date.setMonth(date.getMonth() + i);
+                    const monthName = date.toLocaleString('default', { month: 'short' });
+                    const year = date.getFullYear();
+                    headers.push(`${monthName} ${year}`);
+                }
+                
+                return headers;
+            };
+
+            const toggleTeam = (team) => {
+                setSelectedTeams(prev => 
+                    prev.includes(team) 
+                        ? prev.filter(t => t !== team)
+                        : [...prev, team]
+                );
+            };
+
+            const addCustomTeam = () => {
+                if (customTeam.trim() && !selectedTeams.includes(customTeam.trim())) {
+                    setSelectedTeams(prev => [...prev, customTeam.trim()]);
+                    setCustomTeam('');
+                }
+            };
+
+            const updateEmployeeCount = (team, count) => {
+                setEmployeeCounts(prev => ({
+                    ...prev,
+                    [team]: parseInt(count) || 0
+                }));
+            };
+
+            const getTotalEmployees = () => {
+                return Object.values(employeeCounts).reduce((sum, count) => sum + count, 0);
+            };
+
+            const toggleNonStaffItem = (category, item) => {
+                const key = `${category}|${item}`;
+                setSelectedNonStaffItems(prev => {
+                    const newSelected = {...prev};
+                    if (newSelected[key]) {
+                        delete newSelected[key];
+                        setNonStaffQuantities(prevQty => {
+                            const newQty = {...prevQty};
+                            delete newQty[key];
+                            return newQty;
+                        });
+                    } else {
+                        newSelected[key] = true;
+                        setNonStaffQuantities(prevQty => ({...prevQty, [key]: 1}));
+                    }
+                    return newSelected;
+                });
+            };
+
+            const updateNonStaffQuantity = (category, item, quantity) => {
+                const key = `${category}|${item}`;
+                setNonStaffQuantities(prev => ({
+                    ...prev,
+                    [key]: parseInt(quantity) || 1
+                }));
+            };
+
+            const getTotalNonStaffItems = () => {
+                return Object.values(nonStaffQuantities).reduce((sum, qty) => sum + qty, 0);
+            };
+
+            const addSalesItem = (itemData) => {
+                setSalesItems(prev => [...prev, { ...itemData, id: Date.now() }]);
+            };
+
+            const removeSalesItem = (itemId) => {
+                setSalesItems(prev => prev.filter(item => item.id !== itemId));
+            };
+
+            const updateSalesItem = (itemId, field, value) => {
+                setSalesItems(prev => prev.map(item => 
+                    item.id === itemId ? { ...item, [field]: value } : item
+                ));
+            };
+
+            const getModelFields = (modelId) => {
+                const fields = {
+                    product: [
+                        { name: 'productName', label: 'Product Name', type: 'text', required: true },
+                        { name: 'startingUnits', label: 'Units Sold (Month 1)', type: 'number', required: true, help: 'How many units will you sell in the first month?' },
+                        { name: 'unitPrice', label: 'Price per Unit (£)', type: 'number', step: '0.01', required: true },
+                        { name: 'costPerUnit', label: 'Cost per Unit (£)', type: 'number', step: '0.01', required: true, help: 'Your cost to acquire/produce each unit' },
+                        { name: 'monthlyGrowth', label: 'Monthly Growth Rate (%)', type: 'number', step: '0.1', required: true, help: 'Expected % growth in units sold each month (e.g., 5 for 5%)' }
+                    ],
+                    service: [
+                        { name: 'serviceName', label: 'Service Name', type: 'text', required: true },
+                        { name: 'startingHours', label: 'Hours/Projects (Month 1)', type: 'number', required: true, help: 'Billable hours or number of projects in first month' },
+                        { name: 'hourlyRate', label: 'Rate per Hour/Project (£)', type: 'number', step: '0.01', required: true },
+                        { name: 'deliveryCost', label: 'Delivery Cost per Hour/Project (£)', type: 'number', step: '0.01', required: false, help: 'Contractor costs, materials, etc. Leave 0 if none' },
+                        { name: 'monthlyGrowth', label: 'Monthly Growth Rate (%)', type: 'number', step: '0.1', required: true, help: 'Expected % growth in hours/projects each month' }
+                    ],
+                    saas: [
+                        { name: 'planName', label: 'Plan/Tier Name', type: 'text', required: true },
+                        { name: 'startingSubscribers', label: 'Starting Subscribers (Month 1)', type: 'number', required: true },
+                        { name: 'monthlyPrice', label: 'Monthly Price per Subscriber (£)', type: 'number', step: '0.01', required: true },
+                        { name: 'churnRate', label: 'Monthly Churn Rate (%)', type: 'number', step: '0.1', required: true, help: '% of subscribers who cancel each month (typically 2-7%)' },
+                        { name: 'growthRate', label: 'New Subscriber Growth (%)', type: 'number', step: '0.1', required: true, help: '% growth in new subscribers each month' },
+                        { name: 'costPerSubscriber', label: 'Cost per Subscriber (£)', type: 'number', step: '0.01', required: true, help: 'Hosting, infrastructure, support costs per user' }
+                    ],
+                    marketplace: [
+                        { name: 'transactionType', label: 'Transaction Type', type: 'text', required: true, help: 'e.g., "Product Sales", "Service Bookings"' },
+                        { name: 'startingGMV', label: 'Starting GMV (Month 1) (£)', type: 'number', step: '0.01', required: true, help: 'Gross Merchandise Value - total transaction value' },
+                        { name: 'commissionRate', label: 'Commission Rate (%)', type: 'number', step: '0.1', required: true, help: 'Your % of each transaction' },
+                        { name: 'processingFee', label: 'Payment Processing Fee (%)', type: 'number', step: '0.1', required: true, help: 'Stripe/PayPal fees you pay (typically 2-3%)' },
+                        { name: 'monthlyGrowth', label: 'Monthly GMV Growth (%)', type: 'number', step: '0.1', required: true }
+                    ],
+                    manufacturing: [
+                        { name: 'productLine', label: 'Product Line', type: 'text', required: true },
+                        { name: 'startingUnits', label: 'Units Produced (Month 1)', type: 'number', required: true },
+                        { name: 'pricePerUnit', label: 'Price per Unit (£)', type: 'number', step: '0.01', required: true },
+                        { name: 'materialCost', label: 'Raw Materials per Unit (£)', type: 'number', step: '0.01', required: true },
+                        { name: 'laborCost', label: 'Direct Labor per Unit (£)', type: 'number', step: '0.01', required: true },
+                        { name: 'overheadCost', label: 'Manufacturing Overhead per Unit (£)', type: 'number', step: '0.01', required: true, help: 'Factory costs allocated per unit' },
+                        { name: 'monthlyGrowth', label: 'Monthly Growth Rate (%)', type: 'number', step: '0.1', required: true }
+                    ],
+                    usage: [
+                        { name: 'usageMetric', label: 'Usage Metric', type: 'text', required: true, help: 'e.g., "API Calls", "GB Storage", "Minutes"' },
+                        { name: 'startingVolume', label: 'Starting Volume (Month 1)', type: 'number', required: true, help: 'Total units of usage in first month' },
+                        { name: 'pricePerUnit', label: 'Price per Unit (£)', type: 'number', step: '0.01', required: true },
+                        { name: 'costPerUnit', label: 'Variable Cost per Unit (£)', type: 'number', step: '0.01', required: true, help: 'Infrastructure cost per unit of usage' },
+                        { name: 'monthlyGrowth', label: 'Monthly Volume Growth (%)', type: 'number', step: '0.1', required: true }
+                    ],
+                    hybrid: [
+                        { name: 'streamName', label: 'Revenue Stream Name', type: 'text', required: true },
+                        { name: 'streamType', label: 'Stream Type', type: 'select', required: true, 
+                          options: ['Product', 'Service', 'Subscription', 'Usage', 'Commission'],
+                          help: 'What type of revenue is this?' },
+                        { name: 'startingVolume', label: 'Starting Volume/Units (Month 1)', type: 'number', required: true },
+                        { name: 'price', label: 'Price per Unit (£)', type: 'number', step: '0.01', required: true },
+                        { name: 'cost', label: 'Cost per Unit (£)', type: 'number', step: '0.01', required: true },
+                        { name: 'monthlyGrowth', label: 'Monthly Growth Rate (%)', type: 'number', step: '0.1', required: true }
+                    ]
+                };
+                return fields[modelId] || [];
+            };
+
+            const generateExcel = async (event) => {
+                // Prepare configuration for backend
+                const config = {
+                    selectedTeams: selectedTeams,
+                    employeeCounts: employeeCounts,
+                    extraCategory: extraCategory && extraCategory.name ? {
+                        name: extraCategory.name,
+                        options: extraCategoryOptions.filter(o => o.trim())
+                    } : null,
+                    nonStaffItems: selectedNonStaffItems,
+                    nonStaffQuantities: nonStaffQuantities,
+                    salesModel: salesModel,
+                    salesItems: salesItems,
+                    salesConfig: salesConfig
+                };
+
+                try {
+                    // Show loading state
+                    const button = event?.target || document.activeElement;
+                    const originalText = button.textContent;
+                    button.textContent = '⏳ Generating...';
+                    button.disabled = true;
+
+                    // Call backend to generate Excel
+                    const response = await fetch('/generate-excel', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(config)
+                    });
+
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.error || 'Failed to generate Excel file');
+                    }
+
+                    // Download the file
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'business_model.xlsx';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+
+                    button.textContent = originalText;
+                    button.disabled = false;
+                } catch (error) {
+                    console.error('Error generating Excel:', error);
+                    alert(`Error generating Excel file: ${error.message}. Check the console for details.`);
+                    const button = event?.target || document.activeElement;
+                    button.textContent = '📥 Download Business Model';
+                    button.disabled = false;
+                }
+            };
+
+            const renderIntro = () => (
+                <>
+                    <div className="hero">
+                        <h1>Create Your Business Model</h1>
+                        <p>Answer some simple questions to create a model that you can use for your business. Upon completion you will have a business model that you can edit, upload, and use for forecasting.</p>
+                    </div>
+                    <div className="card">
+                        <div className="card-header">
+                            <h2 className="card-title">Let's Get Started</h2>
+                            <p className="card-subtitle">Do you have an income statement (P&L) that you would like to use for the structure of your model or would you like to build it from scratch?</p>
+                        </div>
+                        <div className="button-group">
+                            <button className="button button-primary" onClick={() => setStep('team-selection')}>
+                                ✨ New Model
+                            </button>
+                            <button 
+                                className="button button-secondary" 
+                                disabled
+                                style={{
+                                    position: 'relative',
+                                    opacity: '0.6',
+                                    cursor: 'not-allowed'
+                                }}
+                            >
+                                📄 Upload P&L
+                                <span style={{
+                                    position: 'absolute',
+                                    top: '-8px',
+                                    right: '-8px',
+                                    background: 'var(--accent)',
+                                    color: 'white',
+                                    fontSize: '0.65rem',
+                                    padding: '0.25rem 0.5rem',
+                                    borderRadius: '12px',
+                                    fontWeight: '600',
+                                    letterSpacing: '0.5px'
+                                }}>
+                                    COMING SOON
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </>
+            );
+
+            const renderTeamSelection = () => {
+                const totalAssigned = getTotalEmployees();
+                const remaining = totalStaffCount ? (totalStaffCount - totalAssigned) : 0;
+                
+                // Auto-assign remaining to Future Hires
+                React.useEffect(() => {
+                    if (totalStaffCount && remaining > 0 && !employeeCounts['Future Hires']) {
+                        setEmployeeCounts(prev => ({...prev, 'Future Hires': remaining}));
+                        if (!selectedTeams.includes('Future Hires')) {
+                            setSelectedTeams(prev => [...prev, 'Future Hires']);
+                        }
+                    } else if (totalStaffCount && remaining < 0) {
+                        // If over-allocated, reduce Future Hires
+                        const futureHires = employeeCounts['Future Hires'] || 0;
+                        if (futureHires > 0) {
+                            const newFutureHires = Math.max(0, futureHires + remaining);
+                            if (newFutureHires === 0) {
+                                const newCounts = {...employeeCounts};
+                                delete newCounts['Future Hires'];
+                                setEmployeeCounts(newCounts);
+                                setSelectedTeams(selectedTeams.filter(t => t !== 'Future Hires'));
+                            } else {
+                                setEmployeeCounts(prev => ({...prev, 'Future Hires': newFutureHires}));
+                            }
+                        }
+                    }
+                }, [totalAssigned, totalStaffCount, remaining]);
+                
+                return (
+                <>
+                    <div className="progress-bar">
+                        <div className="progress-step active">
+                            <div className="progress-step-number">1</div>
+                            <div className="progress-step-label">Staff Setup</div>
+                        </div>
+                        <div className="progress-step">
+                            <div className="progress-step-number">2</div>
+                            <div className="progress-step-label">Customize</div>
+                        </div>
+                        <div className="progress-step">
+                            <div className="progress-step-number">3</div>
+                            <div className="progress-step-label">Complete</div>
+                        </div>
+                    </div>
+
+                    <div className="card">
+                        <div className="card-header">
+                            <h2 className="card-title">Great! Let's start with your staff</h2>
+                            <p className="card-subtitle">
+                                We are going to forecast for all staff you plan to have in the next 48 months. 
+                                Please enter the total number of staff you are going to have during that period.
+                            </p>
+                        </div>
+
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '1rem',
+                            padding: '1.5rem',
+                            background: 'linear-gradient(135deg, rgba(0, 172, 193, 0.05) 0%, rgba(74, 144, 226, 0.05) 100%)',
+                            borderRadius: '12px',
+                            marginBottom: '2rem',
+                            border: '2px solid var(--primary)'
+                        }}>
+                            <div style={{flex: 1}}>
+                                <label style={{
+                                    display: 'block',
+                                    fontWeight: '600',
+                                    marginBottom: '0.5rem',
+                                    color: 'var(--primary-dark)'
+                                }}>
+                                    Total Staff (48 months):
+                                </label>
+                                {totalStaffCount === null ? (
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        className="input-field"
+                                        placeholder="Enter total number..."
+                                        style={{width: '200px'}}
+                                        onKeyPress={(e) => {
+                                            if (e.key === 'Enter' && e.target.value) {
+                                                setTotalStaffCount(parseInt(e.target.value) || 0);
+                                            }
+                                        }}
+                                        onBlur={(e) => {
+                                            if (e.target.value) {
+                                                setTotalStaffCount(parseInt(e.target.value) || 0);
+                                            }
+                                        }}
+                                    />
+                                ) : (
+                                    <div style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '1rem'
+                                    }}>
+                                        <div style={{
+                                            fontSize: '2rem',
+                                            fontWeight: '700',
+                                            color: 'var(--primary)',
+                                            padding: '0.5rem 1.5rem',
+                                            background: 'white',
+                                            borderRadius: '8px',
+                                            border: '2px solid var(--primary)'
+                                        }}>
+                                            {totalStaffCount}
+                                        </div>
+                                        <div>
+                                            <div style={{fontWeight: '600', fontSize: '0.875rem', color: 'var(--text-secondary)'}}>
+                                                employees to assign to a team
+                                            </div>
+                                            <div style={{fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem'}}>
+                                                Assigned: {totalAssigned} | Remaining: {remaining}
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => {
+                                                setTotalStaffCount(null);
+                                                setEmployeeCounts({});
+                                                setSelectedTeams([]);
+                                            }}
+                                            style={{
+                                                marginLeft: 'auto',
+                                                background: 'none',
+                                                border: 'none',
+                                                color: 'var(--text-secondary)',
+                                                cursor: 'pointer',
+                                                fontSize: '0.875rem',
+                                                textDecoration: 'underline'
+                                            }}
+                                        >
+                                            Change
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {totalStaffCount !== null && (
+                            <>
+                                <div className="employee-list">
+                                    {[...TEAM_OPTIONS, ...selectedTeams.filter(t => !TEAM_OPTIONS.includes(t))].map(team => {
+                                        const count = employeeCounts[team] || 0;
+                                        const isCustom = !TEAM_OPTIONS.includes(team);
+                                        const isFutureHires = team === 'Future Hires';
+                                        
+                                        return (
+                                            <div key={team} className="employee-row" style={{
+                                                background: isFutureHires ? 'linear-gradient(135deg, rgba(255, 182, 53, 0.1) 0%, rgba(255, 152, 0, 0.1) 100%)' : undefined,
+                                                border: isFutureHires ? '2px solid #FFB635' : undefined
+                                            }}>
+                                                <div className="employee-label">
+                                                    {team}
+                                                    {isCustom && !isFutureHires && (
+                                                        <button
+                                                            onClick={() => {
+                                                                setSelectedTeams(selectedTeams.filter(t => t !== team));
+                                                                const newCounts = {...employeeCounts};
+                                                                delete newCounts[team];
+                                                                setEmployeeCounts(newCounts);
+                                                            }}
+                                                            style={{
+                                                                background: 'none',
+                                                                border: 'none',
+                                                                color: 'var(--accent)',
+                                                                cursor: 'pointer',
+                                                                marginLeft: '0.5rem',
+                                                                fontSize: '1.25rem',
+                                                                padding: '0'
+                                                            }}
+                                                            title="Remove custom team"
+                                                        >
+                                                            ×
+                                                        </button>
+                                                    )}
+                                                    {isFutureHires && (
+                                                        <span style={{
+                                                            marginLeft: '0.5rem',
+                                                            fontSize: '0.75rem',
+                                                            color: '#FF9800',
+                                                            fontWeight: '600'
+                                                        }}>
+                                                            (Auto-calculated)
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+                                                    <button
+                                                        onClick={() => {
+                                                            const newCount = Math.max(0, count - 1);
+                                                            const newCounts = {...employeeCounts};
+                                                            if (newCount === 0) {
+                                                                delete newCounts[team];
+                                                                setSelectedTeams(selectedTeams.filter(t => t !== team));
+                                                            } else {
+                                                                newCounts[team] = newCount;
+                                                            }
+                                                            setEmployeeCounts(newCounts);
+                                                        }}
+                                                        disabled={isFutureHires}
+                                                        style={{
+                                                            background: 'var(--bg-main)',
+                                                            border: '1px solid var(--border)',
+                                                            borderRadius: '4px',
+                                                            width: '32px',
+                                                            height: '32px',
+                                                            cursor: isFutureHires ? 'not-allowed' : 'pointer',
+                                                            fontSize: '1.25rem',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            color: isFutureHires ? 'var(--text-secondary)' : 'var(--primary)',
+                                                            opacity: isFutureHires ? 0.5 : 1
+                                                        }}
+                                                    >
+                                                        −
+                                                    </button>
+                                                    <input 
+                                                        type="number"
+                                                        min="0"
+                                                        className="employee-input"
+                                                        style={{
+                                                            width: '80px',
+                                                            textAlign: 'center',
+                                                            cursor: 'default',
+                                                            background: isFutureHires ? '#FFF9E6' : undefined,
+                                                            fontWeight: isFutureHires ? '600' : undefined
+                                                        }}
+                                                        value={count}
+                                                        readOnly
+                                                    />
+                                                    <button
+                                                        onClick={() => {
+                                                            const newCount = count + 1;
+                                                            const newCounts = {...employeeCounts, [team]: newCount};
+                                                            if (!selectedTeams.includes(team)) {
+                                                                setSelectedTeams([...selectedTeams, team]);
+                                                            }
+                                                            setEmployeeCounts(newCounts);
+                                                        }}
+                                                        disabled={isFutureHires}
+                                                        style={{
+                                                            background: isFutureHires ? 'var(--bg-main)' : 'var(--primary)',
+                                                            border: isFutureHires ? '1px solid var(--border)' : 'none',
+                                                            borderRadius: '4px',
+                                                            width: '32px',
+                                                            height: '32px',
+                                                            cursor: isFutureHires ? 'not-allowed' : 'pointer',
+                                                            fontSize: '1.25rem',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            color: isFutureHires ? 'var(--text-secondary)' : 'white',
+                                                            opacity: isFutureHires ? 0.5 : 1
+                                                        }}
+                                                    >
+                                                        +
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                <div className="custom-input-wrapper">
+                                    <p className="card-subtitle" style={{marginBottom: '0.75rem'}}>Add a custom team:</p>
+                                    <div style={{display: 'flex', gap: '0.75rem', alignItems: 'flex-end'}}>
+                                        <div style={{flex: 1}}>
+                                            <input 
+                                                type="text"
+                                                className="input-field"
+                                                placeholder="Enter custom team name"
+                                                value={customTeam}
+                                                onChange={(e) => setCustomTeam(e.target.value)}
+                                                onKeyPress={(e) => e.key === 'Enter' && customTeam.trim() && addCustomTeam()}
+                                            />
+                                        </div>
+                                        <button 
+                                            className="button button-secondary" 
+                                            onClick={addCustomTeam}
+                                            disabled={!customTeam.trim()}
+                                        >
+                                            Add
+                                        </button>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
+                        <div className="navigation">
+                            <button className="button button-secondary" onClick={() => setStep('intro')}>
+                                ← Back
+                            </button>
+                            <button 
+                                className="button button-primary" 
+                                onClick={() => setStep('extra-category')}
+                                disabled={totalStaffCount === null || selectedTeams.length === 0}
+                            >
+                                Next →
+                            </button>
+                        </div>
+                    </div>
+                </>
+            );};
+
+            const renderEmployeeCount = () => (
+                <>
+                    <div className="progress-bar">
+                        <div className="progress-step completed">
+                            <div className="progress-step-number">✓</div>
+                            <div className="progress-step-label">Select Teams</div>
+                        </div>
+                        <div className="progress-step active">
+                            <div className="progress-step-number">2</div>
+                            <div className="progress-step-label">Employee Count</div>
+                        </div>
+                        <div className="progress-step">
+                            <div className="progress-step-number">3</div>
+                            <div className="progress-step-label">Customize</div>
+                        </div>
+                        <div className="progress-step">
+                            <div className="progress-step-number">4</div>
+                            <div className="progress-step-label">Complete</div>
+                        </div>
+                    </div>
+
+                    <div className="card">
+                        <div className="card-header">
+                            <h2 className="card-title">How many employees?</h2>
+                            <p className="card-subtitle">Please enter how many employees you have in each team. Add extra if you intend to hire more in your forecast period.</p>
+                        </div>
+
+                        <div className="total-counter">
+                            <div className="total-label">Total Employees</div>
+                            <div className="total-value">{getTotalEmployees()}</div>
+                        </div>
+
+                        <div className="employee-list">
+                            {selectedTeams.map(team => (
+                                <div key={team} className="employee-row">
+                                    <div className="employee-label">{team}</div>
+                                    <input 
+                                        type="number"
+                                        min="0"
+                                        className="employee-input"
+                                        value={employeeCounts[team] || ''}
+                                        onChange={(e) => updateEmployeeCount(team, e.target.value)}
+                                        placeholder="0"
+                                    />
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="navigation">
+                            <button className="button button-secondary" onClick={() => setStep('team-selection')}>
+                                ← Back
+                            </button>
+                            <button 
+                                className="button button-primary" 
+                                onClick={() => setStep('extra-category')}
+                                disabled={getTotalEmployees() === 0}
+                            >
+                                Next →
+                            </button>
+                        </div>
+                    </div>
+                </>
+            );
+
+            const renderExtraCategory = () => (
+                <>
+                    <div className="progress-bar">
+                        <div className="progress-step completed">
+                            <div className="progress-step-number">✓</div>
+                            <div className="progress-step-label">Staff Setup</div>
+                        </div>
+                        <div className="progress-step active">
+                            <div className="progress-step-number">2</div>
+                            <div className="progress-step-label">Customize</div>
+                        </div>
+                        <div className="progress-step">
+                            <div className="progress-step-number">3</div>
+                            <div className="progress-step-label">Complete</div>
+                        </div>
+                    </div>
+
+                    <div className="card">
+                        <div className="card-header">
+                            <h2 className="card-title">Additional Categorization</h2>
+                            <p className="card-subtitle">Would you like to add another column for categories?</p>
+                        </div>
+
+                        {extraCategory === null && (
+                            <div className="button-group">
+                                <button 
+                                    className="button button-primary" 
+                                    onClick={() => setExtraCategory({name: ''})}
+                                >
+                                    Yes, Add Category
+                                </button>
+                                <button 
+                                    className="button button-secondary" 
+                                    onClick={() => {
+                                        setCurrentNonStaffCategoryIndex(0);
+                                        setStep('non-staff-selection');
+                                    }}
+                                >
+                                    No, Skip
+                                </button>
+                            </div>
+                        )}
+
+                        {extraCategory !== null && !extraCategory.options && (
+                            <>
+                                <div className="info-box">
+                                    <div className="info-box-title">Category Name</div>
+                                    <div className="info-box-text">This will be the heading for your additional column</div>
+                                </div>
+                                <input 
+                                    type="text"
+                                    className="input-field"
+                                    placeholder="e.g., Location, Department, Level"
+                                    value={extraCategory.name}
+                                    onChange={(e) => setExtraCategory({...extraCategory, name: e.target.value})}
+                                />
+                                <div className="navigation">
+                                    <button className="button button-secondary" onClick={() => setExtraCategory(null)}>
+                                        Cancel
+                                    </button>
+                                    <button 
+                                        className="button button-primary" 
+                                        onClick={() => {
+                                            setExtraCategory({...extraCategory, options: ['']});
+                                            setExtraCategoryOptions(['']);
+                                        }}
+                                        disabled={!extraCategory.name.trim()}
+                                    >
+                                        Next →
+                                    </button>
+                                </div>
+                            </>
+                        )}
+
+                        {extraCategory !== null && extraCategory.options && extraCategory.options.length > 0 && (
+                            <>
+                                <div className="info-box">
+                                    <div className="info-box-title">Category: {extraCategory.name}</div>
+                                    <div className="info-box-text">Add the options for this category</div>
+                                </div>
+                                
+                                {extraCategoryOptions.map((option, idx) => (
+                                    <div key={`option-${idx}`} style={{marginBottom: '1rem'}}>
+                                        <input 
+                                            type="text"
+                                            className="input-field"
+                                            placeholder={`Option ${idx + 1}`}
+                                            value={option}
+                                            onChange={(e) => {
+                                                const newOptions = [...extraCategoryOptions];
+                                                newOptions[idx] = e.target.value;
+                                                setExtraCategoryOptions(newOptions);
+                                            }}
+                                        />
+                                    </div>
+                                ))}
+                                
+                                <button 
+                                    className="button button-secondary" 
+                                    onClick={() => setExtraCategoryOptions([...extraCategoryOptions, ''])}
+                                    style={{marginBottom: '1rem'}}
+                                >
+                                    + Add Option
+                                </button>
+
+                                <div className="navigation">
+                                    <button className="button button-secondary" onClick={() => setStep('team-selection')}>
+                                        ← Back
+                                    </button>
+                                    <button 
+                                        className="button button-primary" 
+                                        onClick={() => {
+                                            setCurrentNonStaffCategoryIndex(0);
+                                            setStep('non-staff-selection');
+                                        }}
+                                        disabled={extraCategoryOptions.filter(o => o.trim()).length === 0}
+                                    >
+                                        Complete Setup →
+                                    </button>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </>
+            );
+
+            const renderNonStaffSelection = () => {
+                const categories = Object.keys(NON_STAFF_CATEGORIES);
+                const currentCategory = categories[currentNonStaffCategoryIndex];
+                const items = NON_STAFF_CATEGORIES[currentCategory];
+                const isLastCategory = currentNonStaffCategoryIndex === categories.length - 1;
+                
+                const handleNext = () => {
+                    if (isLastCategory) {
+                        setStep('sales-model-selection');
+                    } else {
+                        setCurrentNonStaffCategoryIndex(currentNonStaffCategoryIndex + 1);
+                    }
+                };
+                
+                const handleSkip = () => {
+                    // Deselect all items in current category
+                    const updatedItems = {...selectedNonStaffItems};
+                    items.forEach(item => {
+                        const key = `${currentCategory}|${item}`;
+                        delete updatedItems[key];
+                    });
+                    setSelectedNonStaffItems(updatedItems);
+                    handleNext();
+                };
+                
+                return (
+                    <>
+                        <div className="progress-bar">
+                            <div className="progress-step completed">
+                                <div className="progress-step-number">✓</div>
+                                <div className="progress-step-label">Staff Setup</div>
+                            </div>
+                            <div className="progress-step active">
+                                <div className="progress-step-number">2</div>
+                                <div className="progress-step-label">Non-Staff Costs</div>
+                            </div>
+                            <div className="progress-step">
+                                <div className="progress-step-number">3</div>
+                                <div className="progress-step-label">Sales Forecast</div>
+                            </div>
+                        </div>
+
+                        <div className="card">
+                            <div className="card-header">
+                                <h2 className="card-title">{currentCategory}</h2>
+                                <p className="card-subtitle">
+                                    Category {currentNonStaffCategoryIndex + 1} of {categories.length} • 
+                                    Select items you want to include. You can adjust quantities and edit values in the downloaded file.
+                                </p>
+                            </div>
+
+                            <div className="total-counter" style={{marginBottom: '2rem'}}>
+                                <div className="total-label">Total Items Selected (All Categories)</div>
+                                <div className="total-value">{getTotalNonStaffItems()}</div>
+                            </div>
+
+                            <div className="employee-list">
+                                {items.map(item => {
+                                    const key = `${currentCategory}|${item}`;
+                                    const isSelected = selectedNonStaffItems[key];
+                                    return (
+                                        <div key={item} className="employee-row" style={{
+                                            background: isSelected ? 'linear-gradient(135deg, rgba(0, 172, 193, 0.05) 0%, rgba(74, 144, 226, 0.05) 100%)' : 'var(--bg-main)',
+                                            border: isSelected ? '2px solid var(--primary)' : '1px solid var(--border)'
+                                        }}>
+                                            <div style={{display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1}}>
+                                                <div 
+                                                    className="checkbox"
+                                                    style={{
+                                                        cursor: 'pointer',
+                                                        background: isSelected ? 'var(--primary)' : 'transparent',
+                                                        borderColor: isSelected ? 'var(--primary)' : 'var(--border)'
+                                                    }}
+                                                    onClick={() => toggleNonStaffItem(currentCategory, item)}
+                                                >
+                                                    {isSelected && <span className="checkmark" style={{display: 'block'}}>✓</span>}
+                                                </div>
+                                                <div className="employee-label">{item}</div>
+                                            </div>
+                                            {isSelected && (
+                                                <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+                                                    <span style={{fontSize: '0.875rem', color: 'var(--text-secondary)'}}>Qty:</span>
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            const currentQty = nonStaffQuantities[key] || 1;
+                                                            if (currentQty > 1) {
+                                                                updateNonStaffQuantity(currentCategory, item, currentQty - 1);
+                                                            }
+                                                        }}
+                                                        style={{
+                                                            background: 'var(--bg-main)',
+                                                            border: '1px solid var(--border)',
+                                                            borderRadius: '4px',
+                                                            width: '32px',
+                                                            height: '32px',
+                                                            cursor: 'pointer',
+                                                            fontSize: '1.25rem',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            color: 'var(--primary)'
+                                                        }}
+                                                    >
+                                                        −
+                                                    </button>
+                                                    <input 
+                                                        type="number"
+                                                        min="1"
+                                                        className="employee-input"
+                                                        style={{width: '60px', textAlign: 'center', cursor: 'default'}}
+                                                        value={nonStaffQuantities[key] || 1}
+                                                        readOnly
+                                                    />
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            const currentQty = nonStaffQuantities[key] || 1;
+                                                            updateNonStaffQuantity(currentCategory, item, currentQty + 1);
+                                                        }}
+                                                        style={{
+                                                            background: 'var(--primary)',
+                                                            border: 'none',
+                                                            borderRadius: '4px',
+                                                            width: '32px',
+                                                            height: '32px',
+                                                            cursor: 'pointer',
+                                                            fontSize: '1.25rem',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            color: 'white'
+                                                        }}
+                                                    >
+                                                        +
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            <div className="navigation">
+                                <button 
+                                    className="button button-secondary" 
+                                    onClick={() => {
+                                        if (currentNonStaffCategoryIndex === 0) {
+                                            setStep('extra-category');
+                                        } else {
+                                            setCurrentNonStaffCategoryIndex(currentNonStaffCategoryIndex - 1);
+                                        }
+                                    }}
+                                >
+                                    ← Back
+                                </button>
+                                <div style={{display: 'flex', gap: '0.75rem'}}>
+                                    <button 
+                                        className="button button-secondary" 
+                                        onClick={handleSkip}
+                                    >
+                                        No costs in this category - Skip
+                                    </button>
+                                    <button 
+                                        className="button button-primary" 
+                                        onClick={handleNext}
+                                    >
+                                        {isLastCategory ? 'Next: Sales Forecast →' : 'Next Category →'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </>
+                );
+            };
+
+            const renderSalesModelSelection = () => (
+                <>
+                    <div className="progress-bar">
+                        <div className="progress-step completed">
+                            <div className="progress-step-number">✓</div>
+                            <div className="progress-step-label">Staff & Costs</div>
+                        </div>
+                        <div className="progress-step active">
+                            <div className="progress-step-number">2</div>
+                            <div className="progress-step-label">Sales Model</div>
+                        </div>
+                        <div className="progress-step">
+                            <div className="progress-step-number">3</div>
+                            <div className="progress-step-label">Complete</div>
+                        </div>
+                    </div>
+
+                    <div className="card">
+                        <div className="card-header">
+                            <h2 className="card-title">Sales Forecast & COGS</h2>
+                            <p className="card-subtitle">The final piece of the business plan is our sales forecast with cost of goods sold. There are different types of models depending on the type of business you have. We can help you build your model here or you can choose to build it yourself.</p>
+                        </div>
+
+                        <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem'}}>
+                            {SALES_MODELS.map(model => (
+                                <div 
+                                    key={model.id}
+                                    onClick={() => setSalesModel(model.id)}
+                                    style={{
+                                        background: salesModel === model.id ? 'linear-gradient(135deg, rgba(43, 90, 158, 0.1) 0%, rgba(74, 144, 226, 0.1) 100%)' : 'var(--bg-main)',
+                                        border: salesModel === model.id ? '2px solid var(--primary)' : '1px solid var(--border)',
+                                        borderRadius: '12px',
+                                        padding: '1.5rem',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s',
+                                        position: 'relative'
+                                    }}
+                                >
+                                    <div style={{fontSize: '2rem', marginBottom: '0.75rem'}}>{model.icon}</div>
+                                    <div style={{fontSize: '1rem', fontWeight: '600', marginBottom: '0.5rem', color: 'var(--primary-dark)'}}>
+                                        {model.name}
+                                    </div>
+                                    <div style={{fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: '1.5'}}>
+                                        {model.description}
+                                    </div>
+                                    {salesModel === model.id && (
+                                        <div style={{
+                                            position: 'absolute',
+                                            top: '1rem',
+                                            right: '1rem',
+                                            width: '24px',
+                                            height: '24px',
+                                            background: 'var(--primary)',
+                                            borderRadius: '50%',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            color: 'white',
+                                            fontSize: '0.875rem',
+                                            fontWeight: 'bold'
+                                        }}>
+                                            ✓
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="navigation">
+                            <button className="button button-secondary" onClick={() => setStep('non-staff-selection')}>
+                                ← Back
+                            </button>
+                            <button 
+                                className="button button-primary" 
+                                onClick={() => setStep(salesModel === 'custom' ? 'sales-custom' : 'sales-items')}
+                                disabled={!salesModel}
+                            >
+                                Next →
+                            </button>
+                        </div>
+                    </div>
+                </>
+            );
+
+            const renderSalesItems = () => {
+                const selectedModelData = SALES_MODELS.find(m => m.id === salesModel);
+                const fields = getModelFields(salesModel);
+                
+                if (!selectedModelData || selectedModelData.id === 'custom') return null;
+
+                const handleAddItem = () => {
+                    if (fields.every(f => !f.required || salesFormData[f.name])) {
+                        addSalesItem({...salesFormData, id: Date.now()});
+                        setSalesFormData({});
+                    }
+                };
+
+                return (
+                    <>
+                        <div className="progress-bar">
+                            <div className="progress-step completed">
+                                <div className="progress-step-number">✓</div>
+                                <div className="progress-step-label">Staff & Costs</div>
+                            </div>
+                            <div className="progress-step active">
+                                <div className="progress-step-number">2</div>
+                                <div className="progress-step-label">Sales Model</div>
+                            </div>
+                            <div className="progress-step">
+                                <div className="progress-step-number">3</div>
+                                <div className="progress-step-label">Complete</div>
+                            </div>
+                        </div>
+
+                        <div className="card">
+                            <div className="card-header">
+                                <h2 className="card-title">{selectedModelData.icon} {selectedModelData.name}</h2>
+                                <p className="card-subtitle">Add your revenue streams. You can add multiple items to build your complete sales forecast.</p>
+                            </div>
+
+                            {salesItems.length > 0 && (
+                                <div style={{marginBottom: '2rem'}}>
+                                    <h3 style={{fontSize: '1rem', fontWeight: '600', marginBottom: '1rem', color: 'var(--primary-dark)'}}>
+                                        Added Items ({salesItems.length})
+                                    </h3>
+                                    {salesItems.map((item, idx) => {
+                                        const itemName = item.productName || item.serviceName || item.planName || 
+                                                       item.transactionType || item.productLine || item.usageMetric || 
+                                                       item.streamName || `Item ${idx + 1}`;
+                                        return (
+                                            <div key={item.id} style={{
+                                                background: 'var(--bg-main)',
+                                                border: '1px solid var(--border)',
+                                                borderRadius: '8px',
+                                                padding: '1rem',
+                                                marginBottom: '0.75rem',
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'center'
+                                            }}>
+                                                <div>
+                                                    <div style={{fontWeight: '600', marginBottom: '0.25rem'}}>{itemName}</div>
+                                                    <div style={{fontSize: '0.875rem', color: 'var(--text-secondary)'}}>
+                                                        {Object.entries(item).filter(([key]) => key !== 'id').slice(0, 3).map(([key, value]) => (
+                                                            <span key={key} style={{marginRight: '1rem'}}>
+                                                                {key.replace(/([A-Z])/g, ' $1').trim()}: {value}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                                <button 
+                                                    onClick={() => removeSalesItem(item.id)}
+                                                    style={{
+                                                        background: 'none',
+                                                        border: 'none',
+                                                        color: 'var(--accent)',
+                                                        cursor: 'pointer',
+                                                        fontSize: '1.5rem',
+                                                        padding: '0.5rem',
+                                                        lineHeight: '1'
+                                                    }}
+                                                    title="Remove"
+                                                >×</button>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+
+                            <div style={{
+                                background: 'linear-gradient(135deg, rgba(74, 144, 226, 0.05) 0%, rgba(43, 90, 158, 0.05) 100%)',
+                                border: '2px solid var(--primary)',
+                                borderRadius: '12px',
+                                padding: '1.5rem',
+                                marginBottom: '1.5rem'
+                            }}>
+                                <h3 style={{marginBottom: '1.5rem', color: 'var(--primary-dark)', fontSize: '1.125rem'}}>
+                                    Add New Item
+                                </h3>
+                                <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem'}}>
+                                    {fields.map(field => (
+                                        <div key={field.name}>
+                                            <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.875rem'}}>
+                                                {field.label} {field.required && <span style={{color: 'var(--accent)'}}>*</span>}
+                                            </label>
+                                            {field.type === 'select' ? (
+                                                <select
+                                                    className="input-field"
+                                                    value={salesFormData[field.name] || ''}
+                                                    onChange={(e) => setSalesFormData({...salesFormData, [field.name]: e.target.value})}
+                                                    required={field.required}
+                                                >
+                                                    <option value="">Select...</option>
+                                                    {field.options.map(opt => (
+                                                        <option key={opt} value={opt}>{opt}</option>
+                                                    ))}
+                                                </select>
+                                            ) : (
+                                                <input
+                                                    type={field.type === 'number' ? 'number' : 'text'}
+                                                    step={field.step}
+                                                    min="0"
+                                                    className="input-field"
+                                                    value={salesFormData[field.name] || ''}
+                                                    onChange={(e) => setSalesFormData({...salesFormData, [field.name]: e.target.value})}
+                                                    placeholder={field.help || ''}
+                                                    title={field.help}
+                                                    required={field.required}
+                                                />
+                                            )}
+                                            {field.help && (
+                                                <div style={{fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem'}}>
+                                                    {field.help}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                                <button 
+                                    onClick={handleAddItem} 
+                                    className="button button-primary" 
+                                    style={{marginTop: '1rem'}}
+                                    disabled={!fields.every(f => !f.required || salesFormData[f.name])}
+                                >
+                                    + Add to List
+                                </button>
+                            </div>
+
+                            <div className="navigation">
+                                <button className="button button-secondary" onClick={() => setStep('sales-model-selection')}>
+                                    ← Back
+                                </button>
+                                <button 
+                                    className="button button-primary" 
+                                    onClick={() => setStep('complete')}
+                                    disabled={salesItems.length === 0}
+                                >
+                                    Complete Setup →
+                                </button>
+                            </div>
+                        </div>
+                    </>
+                );
+            };
+
+            const renderSalesCustom = () => (
+                <>
+                    <div className="progress-bar">
+                        <div className="progress-step completed">
+                            <div className="progress-step-number">✓</div>
+                            <div className="progress-step-label">Staff & Costs</div>
+                        </div>
+                        <div className="progress-step active">
+                            <div className="progress-step-number">2</div>
+                            <div className="progress-step-label">Sales Model</div>
+                        </div>
+                        <div className="progress-step">
+                            <div className="progress-step-number">3</div>
+                            <div className="progress-step-label">Complete</div>
+                        </div>
+                    </div>
+
+                    <div className="card">
+                        <div className="card-header">
+                            <h2 className="card-title">Custom Sales Model</h2>
+                            <p className="card-subtitle">You've chosen to design your own model. The Sales tab will be created with Item, Description 1, and Description 2 columns for you to customize.</p>
+                        </div>
+
+                        <div className="info-box">
+                            <div className="info-box-title">✏️ Custom Model</div>
+                            <div className="info-box-text">
+                                Your Sales tab will include flexible columns (Item, Description 1, Description 2) that you can customize in the downloaded Excel file to match your specific business needs.
+                            </div>
+                        </div>
+
+                        <div className="navigation">
+                            <button className="button button-secondary" onClick={() => setStep('sales-model-selection')}>
+                                ← Back
+                            </button>
+                            <button 
+                                className="button button-primary" 
+                                onClick={() => setStep('complete')}
+                            >
+                                Complete Setup →
+                            </button>
+                        </div>
+                    </div>
+                </>
+            );
+
+            function SalesItemForm({ model, onAdd }) {
+                const [formData, setFormData] = useState({});
+
+                const handleSubmit = (e) => {
+                    e.preventDefault();
+                    onAdd(formData);
+                    setFormData({});
+                };
+
+                return (
+                    <form onSubmit={handleSubmit} style={{
+                        background: 'linear-gradient(135deg, rgba(74, 144, 226, 0.05) 0%, rgba(43, 90, 158, 0.05) 100%)',
+                        border: '2px solid var(--primary)',
+                        borderRadius: '12px',
+                        padding: '1.5rem',
+                        marginBottom: '1.5rem'
+                    }}>
+                        <h3 style={{marginBottom: '1rem', color: 'var(--primary-dark)'}}>Add New Item</h3>
+                        <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem'}}>
+                            {model.fields.map(field => (
+                                <div key={field.name}>
+                                    <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: '500', fontSize: '0.875rem'}}>
+                                        {field.label}
+                                    </label>
+                                    {field.type === 'select' ? (
+                                        <select
+                                            className="input-field"
+                                            value={formData[field.name] || ''}
+                                            onChange={(e) => setFormData({...formData, [field.name]: e.target.value})}
+                                            required
+                                        >
+                                            <option value="">Select...</option>
+                                            {field.options.map(opt => (
+                                                <option key={opt} value={opt}>{opt}</option>
+                                            ))}
+                                        </select>
+                                    ) : (
+                                        <input
+                                            type={field.type === 'currency' || field.type === 'number' || field.type === 'percentage' ? 'number' : 'text'}
+                                            step={field.type === 'currency' ? '0.01' : field.type === 'percentage' ? '0.1' : '1'}
+                                            min="0"
+                                            className="input-field"
+                                            value={formData[field.name] || ''}
+                                            onChange={(e) => setFormData({...formData, [field.name]: e.target.value})}
+                                            placeholder={field.type === 'percentage' ? 'e.g., 5 for 5%' : field.type === 'currency' ? '0.00' : ''}
+                                            required
+                                        />
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                        <button type="submit" className="button button-primary" style={{marginTop: '1rem'}}>
+                            + Add Item
+                        </button>
+                    </form>
+                );
+            }
+
+            const renderComplete = () => (
+                <>
+                    <div className="progress-bar">
+                        <div className="progress-step completed">
+                            <div className="progress-step-number">✓</div>
+                            <div className="progress-step-label">Staff Setup</div>
+                        </div>
+                        <div className="progress-step completed">
+                            <div className="progress-step-number">✓</div>
+                            <div className="progress-step-label">Non-Staff Costs</div>
+                        </div>
+                        <div className="progress-step active">
+                            <div className="progress-step-number">3</div>
+                            <div className="progress-step-label">Complete</div>
+                        </div>
+                    </div>
+
+                    <div className="success-message">
+                        <div className="success-icon">✓</div>
+                        <h2 className="success-title">Your Business Model is Complete!</h2>
+                        <p style={{color: 'var(--text-secondary)', marginBottom: '1.5rem'}}>
+                            We have built your business data. You can change the items and prices in this sheet to suit your business. The data is now formatted for you to upload to sherloc and start forecasting.
+                        </p>
+                    </div>
+
+                    <div className="card">
+                        <div className="card-header">
+                            <h2 className="card-title">Your Business Model Summary</h2>
+                        </div>
+
+                        <div className="info-box">
+                            <div className="info-box-title">📊 Staff Tab</div>
+                            <div className="info-box-text">
+                                {getTotalEmployees()} employees across {selectedTeams.length} teams
+                            </div>
+                        </div>
+
+                        <div className="info-box">
+                            <div className="info-box-title">💰 Non-Staff Costs Tab</div>
+                            <div className="info-box-text">
+                                {getTotalNonStaffItems()} line items across {Object.keys(selectedNonStaffItems).length > 0 ? Object.keys(NON_STAFF_CATEGORIES).filter(cat => 
+                                    Object.keys(selectedNonStaffItems).some(key => key.startsWith(cat))
+                                ).length : 0} categories
+                            </div>
+                        </div>
+
+                        <div className="info-box">
+                            <div className="info-box-title">📈 Sales Tab</div>
+                            <div className="info-box-text">
+                                {salesModel === 'custom' ? 'Custom model template ready for your data' : 
+                                 `${salesItems.length} revenue stream${salesItems.length !== 1 ? 's' : ''} configured with ${SALES_MODELS.find(m => m.id === salesModel)?.name.split(' ')[1] || 'sales'} model`}
+                            </div>
+                        </div>
+
+                        <div style={{textAlign: 'center', marginTop: '2rem'}}>
+                            <button className="button button-success" onClick={generateExcel} style={{fontSize: '1.125rem', padding: '1.25rem 3rem'}}>
+                                📥 Download Business Model
+                            </button>
+                            <p style={{color: 'var(--text-secondary)', marginTop: '1rem', fontSize: '0.875rem'}}>
+                                Your Excel file will include 3 tabs with a 48-month forecast starting from {new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}
+                            </p>
+                        </div>
+                    </div>
+                </>
+            );
+
+            return (
+                <div>
+                    <header className="header">
+                        <div className="header-content">
+                            <div className="header-subtitle">Business Data Builder</div>
+                        </div>
+                    </header>
+
+                    <div className="container">
+                        {step === 'intro' && renderIntro()}
+                        {step === 'team-selection' && renderTeamSelection()}
+                        {step === 'employee-count' && renderEmployeeCount()}
+                        {step === 'extra-category' && renderExtraCategory()}
+                        {step === 'non-staff-selection' && renderNonStaffSelection()}
+                        {step === 'sales-model-selection' && renderSalesModelSelection()}
+                        {step === 'sales-items' && renderSalesItems()}
+                        {step === 'sales-custom' && renderSalesCustom()}
+                        {step === 'complete' && renderComplete()}
+                    </div>
+                </div>
+            );
+        }
+
+        // Check if React loaded properly
+        if (typeof React === 'undefined' || typeof ReactDOM === 'undefined') {
+            document.getElementById('root').innerHTML = `
+                <div style="padding: 50px; text-align: center; font-family: Arial, sans-serif;">
+                    <h1 style="color: #FF6B35;">⚠️ Loading Error</h1>
+                    <p>React libraries failed to load. This might be due to:</p>
+                    <ul style="text-align: left; max-width: 500px; margin: 20px auto;">
+                        <li>No internet connection (needed for React CDN)</li>
+                        <li>Ad blocker or security extension blocking scripts</li>
+                        <li>Browser compatibility issue</li>
+                    </ul>
+                    <p><strong>Try:</strong></p>
+                    <ol style="text-align: left; max-width: 500px; margin: 20px auto;">
+                        <li>Check your internet connection</li>
+                        <li>Disable ad blockers/extensions</li>
+                        <li>Try a different browser (Chrome, Firefox, Safari)</li>
+                        <li>Refresh the page (Cmd + R)</li>
+                    </ol>
+                </div>
+            `;
+        } else {
+            // React 18 rendering
+            const root = ReactDOM.createRoot(document.getElementById('root'));
+            root.render(<BusinessDataBuilder />);
+        }
+    </script>
+</body>
+</html>
