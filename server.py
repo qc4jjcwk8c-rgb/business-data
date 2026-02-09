@@ -331,6 +331,12 @@ class BusinessDataHandler(SimpleHTTPRequestHandler):
             # After all revenue items + TOTAL row + 2 blanks + VOLUME header + Volume headers
             volume_section_start_row = revenue_start_row + len(sales_items) + 1 + 2 + 1 + 1
             
+            # Helper to safely convert to float
+            def to_float(val):
+                if val is None or val == '':
+                    return 0
+                return float(val)
+            
             # Store item info for VOLUME and COGS sections
             items_info = []
             
@@ -341,23 +347,24 @@ class BusinessDataHandler(SimpleHTTPRequestHandler):
                            item.get('streamName', 'Item')
                 
                 # Extract pricing info
-                price = float(item.get('unitPrice') or item.get('pricePerUnit') or item.get('hourlyRate') or \
-                            item.get('monthlyPrice') or 0)
+                price = to_float(item.get('unitPrice')) or to_float(item.get('pricePerUnit')) or \
+                       to_float(item.get('hourlyRate')) or to_float(item.get('monthlyPrice')) or 0
                 
                 # Extract volume info
-                start_val = item.get('startingUnits') or item.get('startingHours') or item.get('startingSubscribers') or \
-                           item.get('startingGMV') or item.get('startingVolume', 0)
+                start_val = to_float(item.get('startingUnits')) or to_float(item.get('startingHours')) or \
+                           to_float(item.get('startingSubscribers')) or to_float(item.get('startingGMV')) or \
+                           to_float(item.get('startingVolume')) or 0
                 
                 # Extract growth
-                growth = item.get('monthlyGrowth') or item.get('growthRate', 0)
+                growth = to_float(item.get('monthlyGrowth')) or to_float(item.get('growthRate')) or 0
                 
                 # Store for later sections
                 items_info.append({
                     'name': item_name,
                     'model': sales_model,
                     'price': price,
-                    'start_volume': float(start_val),
-                    'growth': float(growth) / 100,
+                    'start_volume': start_val,
+                    'growth': growth / 100,
                     'item_data': item
                 })
                 
@@ -365,7 +372,7 @@ class BusinessDataHandler(SimpleHTTPRequestHandler):
                 sales_sheet.cell(row=row_num, column=2, value=sales_model.upper())
                 sales_sheet.cell(row=row_num, column=3, value=price)
                 sales_sheet.cell(row=row_num, column=3).number_format = '£#,##0'
-                sales_sheet.cell(row=row_num, column=4, value=float(growth) / 100)
+                sales_sheet.cell(row=row_num, column=4, value=growth / 100)
                 sales_sheet.cell(row=row_num, column=4).number_format = '0.0%'
                 
                 # Revenue formulas: will reference volume section
@@ -515,10 +522,15 @@ class BusinessDataHandler(SimpleHTTPRequestHandler):
                 
                 # Extract cost per unit
                 item_data = info['item_data']
-                cost = float(item_data.get('costPerUnit') or item_data.get('deliveryCost') or \
-                            item_data.get('costPerSubscriber') or \
-                            item_data.get('materialCost', 0) + item_data.get('laborCost', 0) + item_data.get('overheadCost', 0) or \
-                            item_data.get('cost', 0))
+                
+                # Calculate cost - different models use different fields
+                cost = (to_float(item_data.get('costPerUnit')) or 
+                       to_float(item_data.get('deliveryCost')) or 
+                       to_float(item_data.get('costPerSubscriber')) or 
+                       (to_float(item_data.get('materialCost')) + 
+                        to_float(item_data.get('laborCost')) + 
+                        to_float(item_data.get('overheadCost'))) or 
+                       to_float(item_data.get('cost')))
                 
                 sales_sheet.cell(row=row_num, column=3, value=cost)
                 sales_sheet.cell(row=row_num, column=3).number_format = '£#,##0'
