@@ -1113,23 +1113,12 @@
                                         alignItems: 'center',
                                         gap: '1rem'
                                     }}>
-                                        <div style={{
-                                            fontSize: '2rem',
-                                            fontWeight: '700',
-                                            color: 'var(--primary)',
-                                            padding: '0.5rem 1.5rem',
-                                            background: 'white',
-                                            borderRadius: '8px',
-                                            border: '2px solid var(--primary)'
-                                        }}>
-                                            {totalStaffCount}
-                                        </div>
                                         <div>
-                                            <div style={{fontWeight: '600', fontSize: '0.875rem', color: 'var(--text-secondary)'}}>
-                                                employees to assign to a team
+                                            <div style={{fontWeight: '600', fontSize: '1rem', color: 'var(--primary-dark)'}}>
+                                                {totalStaffCount} employees to assign to a team
                                             </div>
-                                            <div style={{fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem'}}>
-                                                Assigned: {totalAssigned} | Remaining: {remaining}
+                                            <div style={{fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.25rem'}}>
+                                                Available: {remaining} | Assigned: {totalAssigned}
                                             </div>
                                         </div>
                                         <button
@@ -1618,7 +1607,7 @@
                                                         type="number"
                                                         min="0"
                                                         className="employee-input"
-                                                        style={{width: '60px', textAlign: 'center', cursor: 'default'}}
+                                                        style={{width: '70px', textAlign: 'center', cursor: 'default', padding: '0.5rem'}}
                                                         value={quantity}
                                                         readOnly
                                                     />

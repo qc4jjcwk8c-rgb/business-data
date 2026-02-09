@@ -327,6 +327,10 @@ class BusinessDataHandler(SimpleHTTPRequestHandler):
             
             revenue_start_row = row_num
             
+            # Pre-calculate where volume section will start
+            # After all revenue items + TOTAL row + 2 blanks + VOLUME header + Volume headers
+            volume_section_start_row = revenue_start_row + len(sales_items) + 1 + 2 + 1 + 1
+            
             # Store item info for VOLUME and COGS sections
             items_info = []
             
@@ -364,9 +368,7 @@ class BusinessDataHandler(SimpleHTTPRequestHandler):
                 sales_sheet.cell(row=row_num, column=4, value=float(growth) / 100)
                 sales_sheet.cell(row=row_num, column=4).number_format = '0.0%'
                 
-                # Revenue formulas: will reference volume section (to be created below)
-                # Volume section will start after TOTAL REVENUE row + 2 blank rows + header
-                volume_section_start = revenue_start_row + len(sales_items) + 3
+                # Revenue formulas: will reference volume section
                 volume_row_offset = row_num - revenue_start_row
                 
                 for month_idx in range(48):
@@ -378,7 +380,7 @@ class BusinessDataHandler(SimpleHTTPRequestHandler):
                     
                     # Formula: Volume × Price
                     # Reference the volume cell in the VOLUME section
-                    volume_row_ref = volume_section_start + volume_row_offset
+                    volume_row_ref = volume_section_start_row + volume_row_offset
                     formula = f'={col_letter}{volume_row_ref}*C{row_num}'
                     
                     cell = sales_sheet.cell(row=row_num, column=col_num, value=formula)
